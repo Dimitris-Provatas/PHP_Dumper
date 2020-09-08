@@ -78,7 +78,7 @@ if (!empty($user) && !empty($pass) && !empty($host))    // make sure everything 
         $tablesResult = $tableConn->query($tablesQuery);    // perform the query
 
         if($tableConn->error)
-            die("Tables querry error: " . $tableConn->error);
+            die("Tables querry error: $tableConn->error for database $db");
 
         // store the tables to an array
         while($row = $tablesResult->fetch_assoc())
@@ -116,7 +116,7 @@ function QueryFields($dbFileLocation, $tableName, $host, $user, $pass, $db)
     $fieldResult = $fieldConn->query($fieldQuery);  // perform the query
 
     if($fieldConn->error)
-        die("Fields querry error: " . $fieldConn->error);
+        die("Fields querry error: $fieldConn->error for table $tableName <br> Query: $fieldQuery");
     
     file_put_contents($dbFileLocation, "-- TABLE: $tableName\n", FILE_APPEND);  // print the table name in the file
 
@@ -154,7 +154,7 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
     $dataResult = $dataConn->query($dataQuery); // execute the query
 
     if($dataConn->error)
-        die("Data querry error: " . $dataConn->error);
+        die("Data querry error: $dataConn->error for table $table <br> Query: $dataQuery");
 
     while($row = $dataResult->fetch_assoc())
     {
