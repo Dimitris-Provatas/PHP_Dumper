@@ -123,7 +123,7 @@ function QueryFields($dbFileLocation, $tableName, $host, $user, $pass, $db)
     while($row = $fieldResult->fetch_assoc())
     {
         if (strcasecmp($row['Type'], "polygon") == 0 || strcasecmp($row['Type'], "point") == 0 || strcasecmp($row['Type'], "linestring") == 0)
-            array_push($fields, "AsText(" . $row['Field'] . ")");   // if there is a Geodata field, get it as text
+            array_push($fields, "AsText('" . $row['Field'] . "')");   // if there is a Geodata field, get it as text
         else
             array_push($fields, "`" . $row['Field'] . "`");         // else just get the field name
 
