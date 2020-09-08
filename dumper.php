@@ -66,7 +66,7 @@ if (!empty($user) && !empty($pass) && !empty($host))    // make sure everything 
     // Loop through the databases
     foreach ($dbNamesArray as $db)
     {
-        $dbFileLocation = "/home/vm/Desktop/PHP_Dump/$db.sql";                          // store the file path
+        $dbFileLocation = $_SERVER['DOCUMENT_ROOT'] . "/PHP_Dump/$db.sql";              // store the file path
         file_put_contents($dbFileLocation, "-- DATABASE: $db\n", FILE_APPEND);          // create the file and append the database name
         file_put_contents($dbFileLocation, "SET FOREIGN_KEY_CHECKS=0;\n", FILE_APPEND); // set the foreign key checks to 0 so there will be no import errors
 
