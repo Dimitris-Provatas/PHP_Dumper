@@ -167,7 +167,7 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
             {
                 if (stripos($fieldTypes[$index], 'text') !== false || stripos($fieldTypes[$index], 'char') !== false || stripos($fieldTypes[$index], 'enum') !== false || stripos($fieldTypes[$index], 'set') !== false)
                     $insertQuery .= "'" . addslashes($datum) . "',";            // String handle
-                else if (stripos($fieldTypes[$index], 'date') !== false)
+                else if (stripos($fieldTypes[$index], 'date') !== false || stripos($fieldTypes[$index], 'time') !== false)
                     $insertQuery .= "'" . $datum . "',";                        // Datetime handle
                 else if (stripos($fieldTypes[$index], 'blob') !== false)
                     $insertQuery .= '0x' . bin2hex($datum) . ",";               // Blobs handle
