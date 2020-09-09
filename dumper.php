@@ -163,7 +163,7 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
         $index = 0; // keep track of the field possition
         foreach ($row as $datum)
         {
-            if (!empty($datum)) // check for data in field
+            if (!is_null($datum)) // check for data in field
             {
                 if (stripos($fieldTypes[$index], 'text') !== false || stripos($fieldTypes[$index], 'char') !== false || stripos($fieldTypes[$index], 'enum') !== false || stripos($fieldTypes[$index], 'set') !== false)
                     $insertQuery .= "'" . addslashes($datum) . "',";            // String handle
@@ -177,8 +177,10 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
                     $insertQuery .= "ST_POINTFROMTEXT('" . $datum . "'),";      // Point handle
                 else if (strcasecmp($fieldTypes[$index], 'linestring') == 0)
                     $insertQuery .= "ST_LINESTRINGFROMTEXT('" . $datum . "'),"; // Linestring handle
+                else if (!empty($datum))
+                    $insertQuery .= $datum . ",";                               // Not empty data handle
                 else
-                    $insertQuery .= $datum . ",";                               // Number handle
+                    $insertQuery .= "DEFAULT,";                                 // Empty data handle
             }
             else
                 $insertQuery .= "NULL,";                                        // Null handle
