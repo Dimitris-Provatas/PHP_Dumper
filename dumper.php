@@ -158,7 +158,7 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
 
     while($row = $dataResult->fetch_assoc())
     {
-        $insertQuery = "INSERT INTO $table VALUES (";   // start the dump
+        $insertQuery = "INSERT IGNORE INTO $table VALUES (";   // start the dump
 
         $index = 0; // keep track of the field possition
         foreach ($row as $datum)
