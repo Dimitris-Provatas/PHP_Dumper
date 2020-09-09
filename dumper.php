@@ -101,7 +101,7 @@ if (!empty($user) && !empty($pass) && !empty($host))    // make sure everything 
 
     die ("<h4>Done with all Databases!</h4>");  // kill the server and inform the user
 }
-// Not all 3 nevessary arguments were given
+// Not all 3 necessary arguments were given
 else
     die("<h1 style='text-align: center;'>You need to specify a user, a password and a hostname for the script to connect to MySQL.<br>You can do that in the URL by appending parameters:<br>yoururl/dumper.php?name=[your name]&pass=[your pass]&host=[your DB host]</h1>");
 
