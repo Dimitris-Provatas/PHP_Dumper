@@ -101,7 +101,7 @@ if (!empty($user) && !empty($pass) && !empty($host))    // make sure everything 
 
     die ("<h4>Done with all Databases!</h4>");  // kill the server and inform the user
 }
-// Not all 3 necessary arguments were given
+// Not all 3 nevessary arguments were given
 else
     die("<h1 style='text-align: center;'>You need to specify a user, a password and a hostname for the script to connect to MySQL.<br>You can do that in the URL by appending parameters:<br>yoururl/dumper.php?name=[your name]&pass=[your pass]&host=[your DB host]</h1>");
 
@@ -111,46 +111,48 @@ function QueryFields($dbFileLocation, $tableName, $host, $user, $pass, $db)
     $fieldConn = new mysqli($host, $user, $pass, $db);  // make a new connection for the fields in each table
     $fields= [];        // start the fields array as empty
     $fieldTypes = [];   // start the field types array as empty
+    $fieldNull = [];    // start the field nulls array as empty
 
     $fieldQuery = "SHOW FIELDS FROM $tableName;";   // get all fields for target table
     $fieldResult = $fieldConn->query($fieldQuery);  // perform the query
 
     if($fieldConn->error)
         die("Fields querry error: $fieldConn->error in database $db for table $tableName <br> Query: $fieldQuery");
-    
+
     file_put_contents($dbFileLocation, "-- TABLE: $tableName\n", FILE_APPEND);  // print the table name in the file
 
     while($row = $fieldResult->fetch_assoc())
     {
         if (strcasecmp($row['Type'], "polygon") == 0 || strcasecmp($row['Type'], "point") == 0 || strcasecmp($row['Type'], "linestring") == 0)
-            array_push($fields, "AsText('" . $row['Field'] . "')");   // if there is a Geodata field, get it as text
+            array_push($fields, "AsText('" . $row['Field'] . "')"); // if there is a Geodata field, get it as text
         else
             array_push($fields, "`" . $row['Field'] . "`");         // else just get the field name
 
         array_push($fieldTypes, $row['Type']);      // store the type of the field
+        array_push($fieldNull, $row['Null']);       // store if the field can be null
     }
 
-    QueryRows($dbFileLocation, $host, $user, $pass, $db, $tableName, $fields, $fieldTypes);
+    QueryRows($dbFileLocation, $host, $user, $pass, $db, $tableName, $fields, $fieldTypes, $fieldNull);
     file_put_contents($dbFileLocation, "\n", FILE_APPEND);  // create an empty line after all table contents 
 
     $fieldConn->close();    // close the connection to the fields (memory optimisation)
 }
 
 // Gets every row from table
-function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $fieldTypes)
+function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $fieldTypes, $fieldNull)
 {
     $dataConn = new mysqli($host, $user, $pass, $db);   // make a new connection for the data in each table
 
-    $dataQuery = "SELECT "; // start the query
+    $dataQuery = "SELECT ";                     // start the query
 
     foreach ($fields as $field)
     {
-        $dataQuery .= $field . ","; // append each field
+        $dataQuery .= $field . ",";             // append each field
     }
 
-    $dataQuery = substr($dataQuery, 0, -1); // remove last comma
+    $dataQuery = substr($dataQuery, 0, -1);     // remove last comma
 
-    $dataQuery .= " FROM " . $table . ";";  // close the query
+    $dataQuery .= " FROM " . $table . ";";      // close the query
     $dataResult = $dataConn->query($dataQuery); // execute the query
 
     if($dataConn->error)
@@ -163,12 +165,24 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
         $index = 0; // keep track of the field possition
         foreach ($row as $datum)
         {
-            if (!is_null($datum)) // check for data in field
+            if (!is_null($datum) || strcasecmp($fieldNull[$index], 'yes') == 0) // check for data in field or if the field can be null
             {
-                if (stripos($fieldTypes[$index], 'text') !== false || stripos($fieldTypes[$index], 'char') !== false || stripos($fieldTypes[$index], 'enum') !== false || stripos($fieldTypes[$index], 'set') !== false)
+                if (stripos($fieldTypes[$index], 'text') !== false || stripos($fieldTypes[$index], 'char') !== false)
                     $insertQuery .= "'" . addslashes($datum) . "',";            // String handle
+                else if (stripos($fieldTypes[$index], 'enum') !== false || stripos($fieldTypes[$index], 'set') !== false)
+                {
+                    if (strcmp($datum, "") == 0)
+                        $insertQuery .= "DEFAULT,";                             // Enum or set without value handle
+                    else
+                        $insertQuery .= "'" . addslashes($datum) . "',";        // Enum or set with value handle
+                }
                 else if (stripos($fieldTypes[$index], 'date') !== false || stripos($fieldTypes[$index], 'time') !== false)
-                    $insertQuery .= "'" . $datum . "',";                        // Datetime handle
+                {
+                    if (strpos($datum, "00-00-00") !== false || strpos($datum, "00:00:00" !== false))
+                        $insertQuery .= "DEFAULT,";                             // Datetime with default value handle
+                    else
+                        $insertQuery .= "'" . $datum . "',";                    // Datetime with value handle
+                }
                 else if (stripos($fieldTypes[$index], 'blob') !== false)
                     $insertQuery .= '0x' . bin2hex($datum) . ",";               // Blobs handle
                 else if (strcasecmp($fieldTypes[$index], 'polygon') == 0)
@@ -185,7 +199,7 @@ function QueryRows($dbFileLocation, $host, $user, $pass, $db, $table, $fields, $
             else
                 $insertQuery .= "NULL,";                                        // Null handle
 
-            $index = $index + 1;
+            $index = $index + 1;                                                // increment the index of the field possition
         }
 
         $insertQuery = substr($insertQuery, 0, -1);                             // Remove the last comma
