@@ -69,6 +69,7 @@ if (!empty($user) && !empty($pass) && !empty($host))    // make sure everything 
         $dbFileLocation = $_SERVER['DOCUMENT_ROOT'] . "/PHP_Dump/$db.sql";              // store the file path
         file_put_contents($dbFileLocation, "-- DATABASE: $db\n", FILE_APPEND);          // create the file and append the database name
         file_put_contents($dbFileLocation, "SET FOREIGN_KEY_CHECKS=0;\n", FILE_APPEND); // set the foreign key checks to 0 so there will be no import errors
+        file_put_contents($dbFileLocation, "\n", FILE_APPEND);                          // empty line for readability
 
         $tableNames = [];   // start the tables array as empty
 
@@ -120,6 +121,7 @@ function QueryFields($dbFileLocation, $tableName, $host, $user, $pass, $db)
         die("Fields querry error: $fieldConn->error in database $db for table $tableName <br> Query: $fieldQuery");
 
     file_put_contents($dbFileLocation, "-- TABLE: $tableName\n", FILE_APPEND);  // print the table name in the file
+    file_put_contents($dbFileLocation, "TRUNCATE TABLE $tableName;\n\n", FILE_APPEND);  // Truncate the table to store the backup data from the begining
 
     while($row = $fieldResult->fetch_assoc())
     {
